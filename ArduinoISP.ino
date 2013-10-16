@@ -1,14 +1,16 @@
 // this sketch turns the Arduino into a AVRISP
 // using the following pins:
+// 9: Replicates Crystal for the Arduino Bootloader
 // 10: slave reset
 // 11: MOSI
-// 12: MISO
+// 12: MISOm
 // 13: SCK
 
 // Put an LED (with resistor) on the following pins:
-//  8: Error - Lights up if something goes wrong (use red if that makes sense)
-// A0: Programming - In communication with the slave
-//  6: Heartbeat - shows the programmer is running (removed, see notes below)
+//  
+// 8: Heartbeat - shows the programmer is running
+// 7: Programming - In communication with the slave
+// 6: Error - Lights up if something goes wrong (use red if that makes sense)
 // Optional - Piezo speaker on pin A3
 //
 // October 2009 by David A. Mellis
@@ -72,9 +74,10 @@
 #include "pins_arduino.h"  // defines SS,MOSI,MISO,SCK
 #define RESET SS
 
-#define LED_ERR 8
-#define LED_PMODE A0
-//#define LED_HB 6
+#define LED_HB 8
+#define LED_ERR 7
+#define LED_PMODE 6
+
 #define PIEZO A3
 
 #define HWVER 2
@@ -140,8 +143,8 @@ void setup() {
   pulse(LED_PMODE, 2);
   pinMode(LED_ERR, OUTPUT);
   pulse(LED_ERR, 2);
-//  pinMode(LED_HB, OUTPUT);
-//  pulse(LED_HB, 2);
+  pinMode(LED_HB, OUTPUT);
+  pulse(LED_HB, 2);
   
   pinMode(9, OUTPUT);
   // setup high freq PWM on pin 9 (timer 1)
@@ -175,18 +178,17 @@ parameter;
 
 parameter param;
 
-// this provides a heartbeat on pin 6, so you can tell the software is running.
-//byte hbval=128;
-//int8_t hbdelta=4;
-//void heartbeat() {
-////  if (hbval > 192) hbdelta = -hbdelta;
-////  if (hbval < 32) hbdelta = -hbdelta;
-//  if (hbval > 250) hbdelta = -hbdelta;
-//  if (hbval < 10) hbdelta = -hbdelta;
-//  hbval += hbdelta;
-//  analogWrite(LED_HB, hbval);
-//  delay(20);
-//}
+// this provides a heartbeat on LED_HB, so you can tell the software is running.
+uint8_t hbval=128;
+int8_t hbdelta=4;
+void heartbeat() {
+  if (hbval > 192) hbdelta = -hbdelta;
+  if (hbval < 32) hbdelta = -hbdelta;
+  hbval += hbdelta;
+  analogWrite(LED_HB, hbval);
+  delay(20);
+}
+
   
 void getEOP() {
   int minL = 0;
@@ -206,13 +208,13 @@ void getEOP() {
       }
     }
     if (!EOP_SEEN) {
-//      heartbeat(); // light the heartbeat LED
-      if (bl == 100) {
-        pulse(LED_ERR,1,10);  // blink the red LED
-        bl = 0;
-      }
-      bl++;
-      delay(10);
+      heartbeat(); // light the heartbeat LED
+//      if (bl == 100) {
+//        pulse(LED_ERR,1,10);  // blink the red LED
+//        bl = 0;
+//      }
+//      bl++;
+      delay(20);
     }
   }
 }
